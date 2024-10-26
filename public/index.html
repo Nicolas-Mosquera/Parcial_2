@@ -2,56 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Registro e Inicio de Sesión</title>
+    <script src="script.js" defer></script>
 </head>
 <body>
     <h1>Registro de Usuario</h1>
-    <form id="registroForm">
-        <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" required>
-        
-        <label for="apellido">Apellido:</label>
-        <input type="text" id="apellido" required>
-        
-        <label for="celular">Número de Celular:</label>
-        <input type="text" id="celular" required>
-        
-        <label for="cedula">Cédula:</label>
-        <input type="text" id="cedula" required>
-        
-        <label for="password">Contraseña:</label>
-        <input type="password" id="password" required>
-        
-        <button type="submit">Registrarse</button>
-    </form>
+    <input type="text" id="nombre" placeholder="Nombre" required>
+    <input type="email" id="correo" placeholder="Correo electrónico" required>
+    <input type="password" id="password" placeholder="Contraseña" required>
+    <button onclick="registrarse()">Registrar</button>
 
-    <script>
-        document.getElementById('registroForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const nombre = document.getElementById('nombre').value;
-            const apellido = document.getElementById('apellido').value;
-            const celular = document.getElementById('celular').value;
-            const cedula = document.getElementById('cedula').value;
-            const password = document.getElementById('password').value;
+    <h2>Iniciar Sesión</h2>
+    <input type="text" id="nombre-login" placeholder="Nombre" required>
+    <input type="password" id="password-login" placeholder="Contraseña" required>
+    <button onclick="iniciarSesion()">Iniciar Sesión</button>
 
-            const response = await fetch('http://localhost:3000/newuser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ nombre, apellido, celular, cedula, password })
-            });
-
-            const data = await response.json();
-            alert(data.message);
-
-            if (data.success) {
-                // Redirigir a la nueva vista para verificar el código
-                window.location.href = 'verificar_codigo.html';
-            }
-        });
-    </script>
+    <p id="mensaje"></p>
 </body>
 </html>

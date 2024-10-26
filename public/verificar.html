@@ -2,38 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verificar Código</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Verificación de Códigos</title>
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <h1>Verificar Código Ganador</h1>
-    <form id="verificarForm">
-        <label for="codigo">Ingrese su código:</label>
-        <input type="text" id="codigo" required>
-        <button type="submit">Verificar</button>
-    </form>
+    <h1>Verificación de Código</h1>
+    <input type="number" id="codigo" placeholder="Ingresa tu código" required>
+    <button onclick="registrarCodigo()">Verificar Código</button>
 
-    <div id="resultado" style="margin-top: 20px;"></div>
-
-    <script>
-        document.getElementById('verificarForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const codigo = document.getElementById('codigo').value;
-
-            const response = await fetch('http://localhost:3000/verificarCodigo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': localStorage.getItem('token') // Token del usuario
-                },
-                body: JSON.stringify({ codigo })
-            });
-
-            const data = await response.json();
-            const resultadoDiv = document.getElementById('resultado');
-            resultadoDiv.innerHTML = data.message;
-        });
-    </script>
+    <p id="mensaje"></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha y Hora</th>
+                <th>Código</th>
+                <th>Premio</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-codigos"></tbody>
+    </table>
 </body>
 </html>

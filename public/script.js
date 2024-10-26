@@ -18,7 +18,7 @@ function registrarse() {
             mensaje.textContent = 'Registro exitoso. Ahora puedes iniciar sesión.';
             mensaje.style.color = 'green';
         } else {
-            mensaje.textContent = data.message;
+            mensaje.textContent = data.message || 'Error al registrarse.';
             mensaje.style.color = 'red';
         }
     })
@@ -30,8 +30,8 @@ function registrarse() {
 
 // Función para iniciar sesión
 function iniciarSesion() {
-    const nombre = document.getElementById('nombre').value;
-    const password = document.getElementById('password').value;
+    const nombre = document.getElementById('nombre-login').value;
+    const password = document.getElementById('password-login').value;
     const mensaje = document.getElementById('mensaje');
 
     fetch('/iniciar-sesion', {
@@ -44,11 +44,10 @@ function iniciarSesion() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Guardar token de sesión (ejemplo básico)
             localStorage.setItem('token', data.token);
-            window.location.href = 'index.html'; // Redirigir al sistema de códigos
+            window.location.href = 'verificar-codigo.html';
         } else {
-            mensaje.textContent = data.message;
+            mensaje.textContent = data.message || 'Nombre o contraseña incorrectos.';
             mensaje.style.color = 'red';
         }
     })
@@ -58,18 +57,24 @@ function iniciarSesion() {
     });
 }
 
-// Lógica para registrar el código (requiere autenticación)
+// Función para registrar código
 function registrarCodigo() {
-    const token = localStorage.getItem('token'); // Obtener el token de sesión
+    const token = localStorage.getItem('token');
     const codigo = parseInt(document.getElementById('codigo').value);
     const mensaje = document.getElementById('mensaje');
+
+    if (!token) {
+        mensaje.textContent = 'Debes iniciar sesión para registrar un código.';
+        mensaje.style.color = 'red';
+        return;
+    }
 
     if (codigo >= 0 && codigo <= 999) {
         fetch('/registrar-codigo', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Enviar el token en el header
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ codigo: codigo })
         })
@@ -78,18 +83,18 @@ function registrarCodigo() {
             if (data.success) {
                 mensaje.textContent = 'Código registrado correctamente';
                 mensaje.style.color = 'green';
-                agregarCodigoATabla(codigo, 'No Ganaste');
+                agregarCodigoATabla(codigo, data.premio || 'No Ganaste');
             } else {
-                mensaje.textContent = data.message;
+                mensaje.textContent = data.message || 'Error al registrar el código.';
                 mensaje.style.color = 'red';
             }
         })
         .catch(error => {
-            mensaje.textContent = 'Error al registrar el código';
+            mensaje.textContent = 'Error al registrar el código.';
             mensaje.style.color = 'red';
         });
     } else {
-        mensaje.textContent = 'Ingresa un código válido (000-999)';
+        mensaje.textContent = 'Ingresa un código válido (000-999).';
         mensaje.style.color = 'red';
     }
 }
@@ -108,3 +113,4 @@ function agregarCodigoATabla(codigo, premio) {
 
     tabla.appendChild(fila);
 }
+
