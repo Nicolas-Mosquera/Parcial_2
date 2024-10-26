@@ -3,41 +3,32 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-const app = express();
 
+const app = express();
 app.use(bodyParser.json());
 
-// Conexión a MongoDB (asegúrate de usar tu URI de conexión)
-const dbURI = 'mongodb://localhost:27017/miBaseDeDatos';
-
-mongoose.connect(dbURI)
+// Conexión a la base de datos local
+mongoose.connect('mongodb+srv://nicolasmosquera01:<DiVMPRufK0Gk8MW9>@cluster0.c5xcv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Conexión a MongoDB establecida'))
     .catch((error) => console.log('Error al conectar a MongoDB:', error));
 
-// Modelos para las colecciones 'usuarios', 'intentos', 'user_info' y 'codigos'
+// Modelos para las colecciones 'usuarios' y 'codigos'
 const UsuarioSchema = new mongoose.Schema({
     nombre: String,
     apellido: String,
     celular: String,
     cedula: String,
     password: String,
+    role: { type: String, default: 'user' }
 }, { collection: 'usuarios' });
 
 const CodigoSchema = new mongoose.Schema({
     codigo: String,
-    premio: Number, // El valor del premio, por ejemplo, 10000, 50000, 1000000
+    premio: Number // El valor del premio, por ejemplo, 10000, 50000, 1000000
 }, { collection: 'codigos' });
-
-const IntentoSchema = new mongoose.Schema({
-    usuarioId: String,
-    codigo: String,
-    esGanador: Boolean,
-    premio: Number,
-}, { collection: 'intentos' });
 
 const Usuario = mongoose.model('Usuario', UsuarioSchema);
 const Codigo = mongoose.model('Codigo', CodigoSchema);
-const Intento = mongoose.model('Intento', IntentoSchema);
 
 // Middleware para verificar token
 const verificarToken = (req, res, next) => {
@@ -46,7 +37,7 @@ const verificarToken = (req, res, next) => {
 
     jwt.verify(token, 'mi_secreto', (err, decoded) => {
         if (err) return res.status(500).json({ success: false, message: 'Token inválido.' });
-        req.usuarioId = decoded.id;
+        req.usuario = decoded.nombre;
         next();
     });
 };
@@ -62,39 +53,18 @@ app.post('/newuser', async (req, res) => {
     res.json({ success: true, message: 'Usuario registrado exitosamente.' });
 });
 
-// Endpoint para login
-app.post('/login', async (req, res) => {
-    const { cedula, password } = req.body;
-
-    const usuario = await Usuario.findOne({ cedula });
-    if (!usuario || !(await bcrypt.compare(password, usuario.password))) {
-        return res.status(401).json({ success: false, message: 'Cédula o contraseña incorrectos.' });
-    }
-
-    const token = jwt.sign({ id: usuario._id }, 'mi_secreto', { expiresIn: '1h' });
-    res.json({ success: true, message: 'Login exitoso.', token });
-});
-
-// Endpoint para registrar un código (verificar si es ganador)
-app.post('/registrarcodigo', verificarToken, async (req, res) => {
+// Endpoint para verificar si un código es ganador
+app.post('/verificarCodigo', verificarToken, async (req, res) => {
     const { codigo } = req.body;
+
     const codigoGanador = await Codigo.findOne({ codigo });
 
     if (codigoGanador) {
-        const intento = new Intento({ usuarioId: req.usuarioId, codigo, esGanador: true, premio: codigoGanador.premio });
-        await intento.save();
-        res.json({ success: true, message: `¡Felicidades! Ganaste un premio de $${codigoGanador.premio}.`, premio: codigoGanador.premio });
+        const usuarioGanador = await Usuario.findOne({ nombre: req.usuario });
+        res.json({ success: true, message: `¡Felicidades ${usuarioGanador.nombre}! Ganaste un premio de $${codigoGanador.premio}.`, premio: codigoGanador.premio });
     } else {
-        const intento = new Intento({ usuarioId: req.usuarioId, codigo, esGanador: false });
-        await intento.save();
         res.json({ success: false, message: 'Lo sentimos, este código no es ganador.' });
     }
-});
-
-// Endpoint para mostrar la tabla de códigos registrados
-app.get('/tablauser', verificarToken, async (req, res) => {
-    const intentos = await Intento.find({ usuarioId: req.usuarioId }).populate('usuarioId');
-    res.json({ success: true, intentos });
 });
 
 // Iniciar servidor
@@ -102,3 +72,4 @@ const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Servidor iniciado en http://localhost:${PORT}`);
 });
+
