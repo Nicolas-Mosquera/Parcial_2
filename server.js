@@ -44,14 +44,18 @@ const verificarToken = (req, res, next) => {
 
 // Endpoint para registro de usuario
 app.post('/newuser', async (req, res) => {
-    const { nombre, apellido, celular, cedula, password } = req.body;
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const nuevoUsuario = new Usuario({ nombre, apellido, celular, cedula, password: hashedPassword });
-
-    await nuevoUsuario.save();
-    res.json({ success: true, message: 'Usuario registrado exitosamente.' });
+    try {
+        const { nombre, apellido, celular, cedula, password } = req.body;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const nuevoUsuario = new Usuario({ nombre, apellido, celular, cedula, password: hashedPassword });
+        await nuevoUsuario.save();
+        res.json({ success: true, message: 'Usuario registrado exitosamente.' });
+    } catch (error) {
+        console.error('Error al registrar usuario:', error);
+        res.status(500).json({ success: false, message: 'Error al registrar usuario.' });
+    }
 });
+
 
 // Endpoint para verificar si un código es ganador
 app.post('/verificarCodigo', verificarToken, async (req, res) => {
@@ -66,6 +70,7 @@ app.post('/verificarCodigo', verificarToken, async (req, res) => {
         res.json({ success: false, message: 'Lo sentimos, este código no es ganador.' });
     }
 });
+
 
 // Iniciar servidor
 const PORT = 3000;
